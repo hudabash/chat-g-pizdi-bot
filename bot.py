@@ -11,7 +11,6 @@ from telegram.ext import (
 )
 from openai import OpenAI
 
-# Загрузка .env переменных
 load_dotenv()
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -20,10 +19,8 @@ WEBHOOK_URL = "https://chat-g-pizdi-bot.onrender.com"
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Настройка логов
 logging.basicConfig(level=logging.INFO)
 
-# Режимы общения
 MODES = {
     "victor": {
         "name": "🧠 Виктор Ravdive",
@@ -41,7 +38,6 @@ MODES = {
 
 current_mode_key = "victor"
 
-# Команда /mode
 async def set_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global current_mode_key
     if context.args and context.args[0] in MODES:
@@ -51,7 +47,6 @@ async def set_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
         mode_list = "\n".join([f"/mode {k} — {v['name']}" for k, v in MODES.items()])
         await update.message.reply_text(f"Выбери режим общения:\n{mode_list}")
 
-# Обработка сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
 
@@ -66,20 +61,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(response.choices[0].message.content.strip())
 
-# Запуск
-async def main():
-    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+# 🚀 Запуск напрямую
+app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-    app.add_handler(CommandHandler("mode", set_mode))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+app.add_handler(CommandHandler("mode", set_mode))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Запускаем Webhook
-    await app.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 10000)),
-        webhook_url=f"{WEBHOOK_URL}/webhook"
-    )
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+app.run_webhook(
+    listen="0.0.0.0",
+    port=int(os.environ.get("PORT", 10000)),
+    webhook_url=f"{WEBHOOK_URL}/webhook"
+)
