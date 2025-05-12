@@ -70,7 +70,5 @@ app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 app.run_webhook(
     listen="0.0.0.0",
     port=int(os.environ.get("PORT", 10000)),
-    webhook_url=f"{WEBHOOK_URL}/webhook",
-    web_app=None,
-    web_concurrent_updates=True
+    webhook_url=f"{WEBHOOK_URL}/webhook"
 )
