@@ -1,2 +1,3 @@
-TELEGRAM_TOKEN=твой_токен_от_BotFather
-OPENAI_API_KEY=твой_ключ_от_OpenAI
+python-telegram-bot
+openai>=1.0.0
+python-dotenv
