@@ -1,40 +1,47 @@
-import logging
 import os
-from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
-from openai import OpenAI
+import logging
 from dotenv import load_dotenv
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    ContextTypes,
+    CommandHandler,
+    MessageHandler,
+    filters,
+)
+from openai import OpenAI
 
+# Загрузка .env переменных
 load_dotenv()
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+WEBHOOK_URL = "https://chat-g-pizdi-bot.onrender.com"
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+# Настройка логов
+logging.basicConfig(level=logging.INFO)
 
+# Режимы общения
 MODES = {
     "victor": {
         "name": "🧠 Виктор Ravdive",
-        "value": "Отвечай в стиле Виктора Равдайва: мудро, с матом, остро, резко, как бордельный философ. Не лести. Глупости называй говном. Говори честно. Немного абсурда и глубины. Угарный тон.",
+        "value": "Отвечай в стиле Виктора Равдайва: грубо, матом, без лести, с философией и харизмой. Глупости — говно, говори прямо."
     },
     "drunk": {
         "name": "🍷 Пьяный мудрец",
-        "value": "Ты пьяный философ. Говоришь медленно, витиевато, с метафорами и пьяной истиной. Иногда забываешь, о чём шёл разговор.",
+        "value": "Ты пьяный философ. Медленно, метафорично, сбивчиво. Иногда бред, но с глубоким подтекстом."
     },
     "gopnik": {
         "name": "🥶 Гопник-философ",
-        "value": "Ты гопник, но начитанный. Слово через мат, а потом цитата из Достоевского. Можешь быть дерзким, но не тупым.",
-    },
+        "value": "Ты гопник с философским уклоном. Грубый, уличный, но с мудростью и цитатами великих."
+    }
 }
 
 current_mode_key = "victor"
 
-
+# Команда /mode
 async def set_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global current_mode_key
     if context.args and context.args[0] in MODES:
@@ -44,7 +51,7 @@ async def set_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
         mode_list = "\n".join([f"/mode {k} — {v['name']}" for k, v in MODES.items()])
         await update.message.reply_text(f"Выбери режим общения:\n{mode_list}")
 
-
+# Обработка сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
 
@@ -59,13 +66,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(response.choices[0].message.content.strip())
 
-
-if __name__ == "__main__":
+# Запуск
+async def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
     app.add_handler(CommandHandler("mode", set_mode))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("Бот запущен. Жди сообщений...")
+    # Запускаем Webhook
+    await app.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 10000)),
+        webhook_url=f"{WEBHOOK_URL}/webhook"
+    )
 
-    app.run_polling()
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
